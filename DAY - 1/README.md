@@ -1,66 +1,38 @@
 # Linear Regression with TensorFlow
 
-A simple linear regression model built with TensorFlow (Keras) on synthetic data. The model learns the relationship `y = 3x + 2` from noisy data and plots its predictions against the true values.
+A simple linear regression model built with TensorFlow/Keras on synthetic data. It learns the relationship `y = 3x + 2` from noisy samples and plots the predictions against the true values.
 
-## Requirements
+## What it does
 
-- Python 3.9 to 3.12
-- TensorFlow
-- NumPy
-- Matplotlib
+1. Sets up a virtual environment with TensorFlow
+2. Generates synthetic data (X, y) with NumPy
+3. Defines a Sequential model with one Dense layer
+4. Compiles with MSE loss and the Adam optimizer
+5. Trains the model and plots predictions vs. true values
 
 ## Setup
 
-### Option 1: JupyterLab (quick)
-
-Run this in the first notebook cell, then restart the kernel:
-
-```python
-%pip install tensorflow numpy matplotlib
+```bash
+python -m venv venv
+source venv/bin/activate      # Windows: venv\Scripts\activate
+pip install -r requirements.txt
 ```
 
-### Option 2: Virtual environment (recommended)
+## Run
 
 ```bash
-python -m venv tf_env
-
-# Windows
-tf_env\Scripts\activate
-# Mac/Linux
-source tf_env/bin/activate
-
-pip install tensorflow numpy matplotlib ipykernel
-python -m ipykernel install --user --name tf_env --display-name "Python (tf_env)"
+python linear_regression_tf.py
 ```
 
-Open JupyterLab and select the **Python (tf_env)** kernel.
+The script prints the final loss and the learned slope and intercept (which should be close to 3 and 2), and saves the plot as `predictions_vs_true.png`.
 
-Verify the install:
+## Files
 
-```python
-import tensorflow as tf
-print(tf.__version__)
-```
+- `linear_regression_tf.py`: model training and plotting
+- `requirements.txt`: Python dependencies
 
-## Steps
+## Tech
 
-1. Create a virtual environment and install TensorFlow
-2. Generate synthetic data (X, y) with NumPy
-3. Define a TensorFlow Sequential model with one Dense layer
-4. Compile the model with MSE loss and the Adam optimizer
-5. Train the model and plot predictions vs. true values
+Python, TensorFlow, NumPy, Matplotlib
 
-## Usage
-
-Run the code cells in order in a notebook. After training, the learned weight and bias are printed. They should be close to 3 and 2.
-
-## Expected Output
-
-- Printed weight near `3.0` and bias near `2.0`
-- A scatter plot of the true values with the model's predicted line in red
-
-## Troubleshooting
-
-- **Install fails:** check your Python version with `python --version`. TensorFlow may not support the newest Python releases.
-- **Import error after install:** restart the kernel (Kernel → Restart Kernel).
-- **Wrong kernel:** make sure the notebook is using the kernel where TensorFlow was installed.
+*Learning project from Skillplot (ML track).*
