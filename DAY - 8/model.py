@@ -1,10 +1,13 @@
 """CNN architecture: Conv2D, BatchNorm, MaxPooling2D and Dropout layers."""
 
+from typing import Tuple
+
 from tensorflow import keras
 from tensorflow.keras import layers
 
 
-def build_cnn(input_shape=(32, 32, 3), num_classes=10, builtin_augmentation=False) -> keras.Model:
+def build_cnn(input_shape: Tuple[int, int, int] = (32, 32, 3), num_classes: int = 10,
+              builtin_augmentation: bool = False) -> keras.Model:
     """Three conv blocks (Conv-Conv-Pool-Dropout) followed by a dense classifier.
 
     builtin_augmentation: the original version had Keras flip/translate layers

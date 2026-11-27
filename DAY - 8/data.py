@@ -4,6 +4,8 @@ load_cifar10_raw() returns uint8 images (needed by imgaug).
 load_cifar10()     returns float32 images in [0, 1] (used by evaluate.py).
 """
 
+from typing import Tuple
+
 import numpy as np
 
 CLASS_NAMES = [
@@ -17,7 +19,7 @@ def preprocess(images: np.ndarray) -> np.ndarray:
     return images.astype("float32") / 255.0
 
 
-def load_cifar10_raw():
+def load_cifar10_raw() -> Tuple[Tuple[np.ndarray, np.ndarray], Tuple[np.ndarray, np.ndarray]]:
     """Download CIFAR-10 (cached after the first run).
 
     Returns (x_train, y_train), (x_test, y_test):
@@ -33,7 +35,7 @@ def load_cifar10_raw():
     )
 
 
-def load_cifar10():
+def load_cifar10() -> Tuple[Tuple[np.ndarray, np.ndarray], Tuple[np.ndarray, np.ndarray]]:
     """Like load_cifar10_raw() but with images scaled to float32 [0, 1]."""
     (x_train, y_train), (x_test, y_test) = load_cifar10_raw()
     return (preprocess(x_train), y_train), (preprocess(x_test), y_test)
