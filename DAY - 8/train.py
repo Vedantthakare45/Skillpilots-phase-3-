@@ -4,19 +4,26 @@ Usage:
     python train.py                 # augmented  -> outputs/augmented/
     python train.py --no-augment    # baseline   -> outputs/baseline/
     python train.py --epochs 60 --batch-size 128 --patience 10
+    python train.py --deterministic # exactly repeatable runs (slower on GPU)
 """
 
 import argparse
 import json
 import os
+from typing import Any, Dict, Optional
 
-from augmentation import AUG_CONFIG
+from augmentation import AugConfig, resolve_config
 from reporting import plot_history, summarize_history
+from seeding import set_global_seed
 
 
-def train(augment=True, epochs=50, batch_size=64, patience=8, val_split=0.1,
-          output_dir=None, seed=42, aug_config=None):
-    """Train one model, save everything into output_dir, and return its metrics dict."""
+def train(augment: bool = True, epochs: int = 50, batch_size: int = 64, patience: int = 8,
+          val_split: float = 0.1, output_dir: Optional[str] = None, seed: int = 42,
+          aug_config: Optional[AugConfig] = None, deterministic: bool = False) -> Dict[str, Any]:
+    """Train one model, save everything into `output_dir`, and return its metrics dict.
+
+    Saved files: best_model.keras, history.json, metrics.json, training_curves.png.
+    """
     from tensorflow import keras
 
     from data import load_cifar10_raw
@@ -25,13 +32,13 @@ def train(augment=True, epochs=50, batch_size=64, patience=8, val_split=0.1,
 
     output_dir = output_dir or os.path.join("outputs", "augmented" if augment else "baseline")
     os.makedirs(output_dir, exist_ok=True)
-    cfg = {**AUG_CONFIG, **(aug_config or {})}
+    cfg = resolve_config(aug_config)
 
-    keras.utils.set_random_seed(seed)
+    set_global_seed(seed, deterministic)
     (x_train, y_train), (x_test, y_test) = load_cifar10_raw()
     train_ds, val_ds, test_ds = make_datasets(
-        x_train, y_train, x_test, y_test,
-        batch_size=batch_size, augment=augment, val_split=val_split, seed=seed, aug_config=cfg,
+        x_train, y_train, x_test, y_test, batch_size=batch_size, augment=augment,
+        val_split=val_split, seed=seed, aug_config=cfg, deterministic=deterministic,
     )
 
     model = build_cnn()
@@ -57,6 +64,7 @@ def train(augment=True, epochs=50, batch_size=64, patience=8, val_split=0.1,
 
     test_loss, test_acc = model.evaluate(test_ds, verbose=0)
     metrics = summarize_history(hist, test_loss, test_acc, augment, cfg)
+    metrics.update({"seed": seed, "deterministic": deterministic})
 
     with open(os.path.join(output_dir, "history.json"), "w") as f:
         json.dump(hist, f, indent=2)
@@ -69,7 +77,7 @@ def train(augment=True, epochs=50, batch_size=64, patience=8, val_split=0.1,
     return metrics
 
 
-def parse_args(argv=None):
+def parse_args(argv=None) -> argparse.Namespace:
     p = argparse.ArgumentParser(description="Train a CNN on CIFAR-10 with imgaug augmentation.")
     p.add_argument("--augment", action=argparse.BooleanOptionalAction, default=True,
                    help="use the imgaug pipeline (default on); --no-augment for the baseline")
@@ -79,12 +87,15 @@ def parse_args(argv=None):
     p.add_argument("--val-split", type=float, default=0.1)
     p.add_argument("--output-dir", default=None, help="default: outputs/augmented or outputs/baseline")
     p.add_argument("--seed", type=int, default=42)
+    p.add_argument("--deterministic", action="store_true",
+                   help="exactly repeatable results (deterministic TF ops, single-thread augmentation)")
     return p.parse_args(argv)
 
 
-def main():
+def main() -> None:
     a = parse_args()
-    train(a.augment, a.epochs, a.batch_size, a.patience, a.val_split, a.output_dir, a.seed)
+    train(a.augment, a.epochs, a.batch_size, a.patience, a.val_split, a.output_dir,
+          a.seed, deterministic=a.deterministic)
     print("Next: python compare.py   (or: python evaluate.py && python export.py)")
 
 
